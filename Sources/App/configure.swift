@@ -71,7 +71,7 @@ extension MySQLDatabaseConfig {
             }
         }
         
-        return MySQLDatabaseConfig(hostname: hostname, port: port, username: username, password: password, database: name)
+        return MySQLDatabaseConfig(hostname: hostname, port: port, username: username, password: password, database: name, transport: .unverifiedTLS)
     }
 }
 
