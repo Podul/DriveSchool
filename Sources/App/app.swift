@@ -7,11 +7,11 @@ public func app(_ env: Environment) throws -> Application {
     var services = Services.default()
     
     // 改端口等信息
-    #if os(Linux)
-        let con = NIOServerConfig.default(port: 12138)
-        services.register(con)
-    #endif
-    let con = NIOServerConfig.default(port: 12138)
+//    #if os(Linux)
+//        let con = NIOServerConfig.default(port: 12138)
+//        services.register(con)
+//    #endif
+    let con = NIOServerConfig.loadDefaultConfig()
     services.register(con)
     
     
