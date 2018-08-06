@@ -29,6 +29,7 @@ struct UserController: RouteCollection {
                 let token = try Token.generate(for: newInfo)
                 let userPublic = User.Public(name: newInfo.name)
                 userPublic.id = newInfo.id
+                _ = token.save(on: req)
                 return try Result<User.Public>(errorCode: 0, result: userPublic, message: "注册成功", token: token.token).encode(for: req)
             }
         }
@@ -53,6 +54,7 @@ struct UserController: RouteCollection {
                     let publicUser = User.Public(name: aUser.name)
                     publicUser.id = aUser.id
                     let token = try Token.generate(for: aUser)
+                    _ = token.save(on: req)
                     return Result(errorCode: 0, result: publicUser, message: "登录成功", token: token.token)
                 }else {
                     // 密码错误
