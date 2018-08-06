@@ -25,10 +25,9 @@ extension NIOServerConfig {
     static func loadDefaultConfig() -> NIOServerConfig {
         
         struct ServerConfig: Codable {
-            var hostname: String?
-            var port: Int?
+            var hostname: String = "127.0.0.1"
+            var port: Int = 8080
         }
-        
         #if os(Linux)
         let path = "/home/project/Private/config.json"
         if let data = FileManager.default.contents(atPath: path) {
