@@ -70,8 +70,12 @@ extension MySQLDatabaseConfig {
                 PrintLogger().warning("读取失败")
             }
         }
-        
+        #if os(Linux)
+        return MySQLDatabaseConfig(hostname: hostname, port: port, username: username, password: password, database: name)
+        #else
         return MySQLDatabaseConfig(hostname: hostname, port: port, username: username, password: password, database: name, transport: .unverifiedTLS)
+        #endif
+        
     }
 }
 
