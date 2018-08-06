@@ -8,7 +8,7 @@ public func app(_ env: Environment) throws -> Application {
     
     // 改端口等信息
     #if os(Linux)
-        let con = NIOServerConfig.default(port: 80)
+        let con = NIOServerConfig.default(port: 12138)
         services.register(con)
     #endif
     
