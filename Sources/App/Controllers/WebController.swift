@@ -10,7 +10,7 @@ import Leaf
 
 struct WebController: RouteCollection {
     func boot(router: Router) throws {
-        router.get(use: index)
+//        router.get(use: index)
     }
     
     func index(_ req: Request) throws -> Future<View> {
