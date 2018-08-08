@@ -8,7 +8,8 @@
 import Foundation
 import Vapor
 
-struct Result<T>: Codable where T: Codable {
+struct Result<T>: Content where T: Content {
+    
     var code: Int
     var result: T?
     var message: String
@@ -22,10 +23,15 @@ struct Result<T>: Codable where T: Codable {
     }
 }
 
-extension Result: Content {}
 
-
-
+/// code 每个模型分 100 个
+/// 000000
+/// 000100
+/// ...
+/// 001000
+/// 001100
+/// ...
+/// 缺少参数时code统一为 000001
 struct DSError: Content {
     var code: Int
     var message: String
@@ -35,76 +41,16 @@ struct DSError: Content {
         self.message = message
     }
     
-    static func none(_ message: String? = nil) -> DSError {
-        return DSError(code: 000000, message: message ?? "成功")
+    /// 成功
+    static func none(_ message: String = "成功") -> DSError {
+        return DSError(code: 000000, message: message)
     }
     
-//    static let register = Register.success
-//    static let registerFailed = DSError(code: 1, message: "注册失败")
-//    static let registerFailed = DSError(code: 1, message: "注册失败")
-//    static let registerFailed = DSError(code: 1, message: "注册失败")
-//    static let registerFailed = DSError(code: 1, message: "注册失败")
+    /// 缺少参数
+    static func miss(_ message: String = "缺少参数") -> DSError {
+        return DSError(code: 000001, message: message)
+    }
+    
+    /// 未知错误
+    static let unknow = DSError(code: 000002, message: "未知错误")
 }
-
-
-//struct ErrorContent: Codable {
-//    var code: Int
-//    var message: String
-//
-//    init(code: Int, message: String) {
-//        self.code = code
-//        self.message = message
-//    }
-//}
-
-/**
-enum DSError {
-//    typealias RawValue = Int
-    
-    // 成功
-    // 注册失败
-    // 登录失败
-
-    case none               /// 成功
-    case alreadyExist       /// 用户已经存在
-    case noExist            /// 用户不存在
-    case miss               /// 缺少参数
-    case token              /// token过期
-    case password           /// 密码错误
-    
-    var code: Int {
-        switch self {
-        case .none:
-            return 0
-        case .alreadyExist:
-            return 1
-        case .miss:
-            return 2
-        case .token:
-            return 3
-        case .password:
-            return 4
-        case .noExist:
-            return 5
-        }
-    }
-    
-    var message: String {
-        switch self {
-        case .none:
-            return "成功"
-        case .alreadyExist:
-            return "用户已存在"
-        case .noExist:
-            return "用户不存在"
-        case .miss:
-            return "缺少参数"
-        case .token:
-            return "token过期"
-        case .password:
-            return "密码错误"
-        }
-    }
-
-}
-*/

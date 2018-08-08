@@ -39,6 +39,7 @@ struct UserController: RouteCollection {
     }
     
     func userLogin(_ req: Request) throws -> Future<Result<User.Public>> {
+        
         let result = try req.content.decode(User.self).flatMap { info -> Future<Result<User.Public>> in
             // 查找数据库是否有该用户
             let queryUserInfo = User.query(on: req).filter(\.name == info.name).all().map(to: Result<User.Public>.self) { users -> Result<User.Public> in
@@ -51,7 +52,7 @@ struct UserController: RouteCollection {
                 let aUser = users.first!
                 let digest = try req.make(BCryptDigest.self)
                 
-                print(info.password)
+//                print(info.password)
                 
                 if try digest.verify(info.password, created: aUser.password) {
                     // 密码正确
@@ -68,7 +69,16 @@ struct UserController: RouteCollection {
             }
             return queryUserInfo
         }
-        return result
+        
+        return result.mapIfError({ (error) -> Result<User.Public> in
+            print(error.localizedDescription)
+            if let error = error as? MultipartError {
+                return Result(error: .miss(error.reason))
+            }
+//            if aa.identifier == "missingPart" {
+            return Result(error: .unknow)
+        })
+//        return result!
     }
 }
 
