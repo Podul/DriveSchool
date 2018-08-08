@@ -9,20 +9,53 @@ import Foundation
 import Vapor
 
 struct Result<T>: Codable where T: Codable {
-    var errorCode: Int
+    var code: Int
     var result: T?
     var message: String
     var token: String?
     
-    init(errorCode: Int, result: T?, message: String, token: String? = nil) {
-        self.errorCode = errorCode
+    init(error: DSError, result: T? = nil, token: String? = nil) {
+        self.code = error.code
         self.result = result
+        self.message = error.message
         self.token = token
-        self.message = message
     }
 }
 
 extension Result: Content {}
+
+
+
+struct DSError: Content {
+    var code: Int
+    var message: String
+    
+    init(code: Int, message: String) {
+        self.code = code
+        self.message = message
+    }
+    
+    static func none(_ message: String? = nil) -> DSError {
+        return DSError(code: 000000, message: message ?? "成功")
+    }
+    
+//    static let register = Register.success
+//    static let registerFailed = DSError(code: 1, message: "注册失败")
+//    static let registerFailed = DSError(code: 1, message: "注册失败")
+//    static let registerFailed = DSError(code: 1, message: "注册失败")
+//    static let registerFailed = DSError(code: 1, message: "注册失败")
+}
+
+
+//struct ErrorContent: Codable {
+//    var code: Int
+//    var message: String
+//
+//    init(code: Int, message: String) {
+//        self.code = code
+//        self.message = message
+//    }
+//}
 
 /**
 enum DSError {

@@ -14,13 +14,15 @@ struct UserController: RouteCollection {
         let userGroup = router.grouped("api", "user")
         userGroup.post(User.self, at: "register", use: userRegister)
         userGroup.post("login", use: userLogin)
+        
     }
     
     func userRegister(_ req: Request, newUser: User) throws -> Future<Response> {
         let aUser = User.query(on: req).filter(\.name == newUser.name).first()
         return aUser.flatMap { oldUser -> Future<Response> in
             if oldUser != nil {
-                return try Result<User.Public>(errorCode: 2, result: nil, message: "用户已存在").encode(for: req)
+                // 用户已存在
+                return try Result<User.Public>(error: DSError.register.alreadyExist).encode(for: req)
             }
             
             let digest = try req.make(BCryptDigest.self)
@@ -30,7 +32,8 @@ struct UserController: RouteCollection {
                 let userPublic = User.Public(name: newInfo.name)
                 userPublic.id = newInfo.id
                 _ = token.save(on: req)
-                return try Result<User.Public>(errorCode: 0, result: userPublic, message: "注册成功", token: token.token).encode(for: req)
+                // 注册成功
+                return try Result(error: DSError.register.success, result: userPublic, token: token.token).encode(for: req)
             }
         }
     }
@@ -41,7 +44,8 @@ struct UserController: RouteCollection {
             let queryUserInfo = User.query(on: req).filter(\.name == info.name).all().map(to: Result<User.Public>.self) { users -> Result<User.Public> in
                 // 不存在，登录失败
                 if users.count == 0 {
-                    return Result(errorCode: 1, result: nil, message: "用户不存在")
+                    // 用户不存在
+                    return Result<User.Public>(error: DSError.login.nonExist, result: nil)
                 }
                 // 存在，进行密码验证
                 let aUser = users.first!
@@ -55,10 +59,11 @@ struct UserController: RouteCollection {
                     publicUser.id = aUser.id
                     let token = try Token.generate(for: aUser)
                     _ = token.save(on: req)
-                    return Result(errorCode: 0, result: publicUser, message: "登录成功", token: token.token)
+                    // 登录成功
+                    return Result(error: DSError.login.success, result: publicUser, token: token.token)
                 }else {
                     // 密码错误
-                    return Result(errorCode: 1, result: nil, message: "密码错误")
+                    return Result(error: DSError.login.passwordError)
                 }
             }
             return queryUserInfo
