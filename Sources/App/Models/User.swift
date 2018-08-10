@@ -17,16 +17,21 @@ final class User: Content {
     init(name: String, password: String) {
         self.name = name
         self.password = password
-        
     }
     
     final class Public: Content {
         var id: Int?
         var name: String
-//        let aaa: DSError = .none()
-        init(name: String) {
-            self.name = name
+        init(user: User) {
+            self.id = user.id
+            self.name = user.name
         }
+    }
+}
+
+extension User {
+    var token: Children<User, Token> {
+        return children(\.userID)
     }
 }
 
