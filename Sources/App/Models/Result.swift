@@ -8,7 +8,20 @@
 import Foundation
 import Vapor
 
-struct Result<T>: Content where T: Content {
+protocol Resultable: Content {}
+
+extension Resultable {
+    /// 成功
+    func success(error: DSError, token: String? = nil) -> Result<Self> {
+        return Result(error: error, result: self, token: token)
+    }
+    /// 失败
+    static func failure(_ error: DSError) -> Result<Self> {
+        return Result(error: error)
+    }
+}
+
+struct Result<T>: Content where T: Resultable {
     
     var code: Int
     var result: T?
@@ -22,6 +35,7 @@ struct Result<T>: Content where T: Content {
         self.token = token
     }
 }
+
 
 
 /// code 每个模型分 100 个

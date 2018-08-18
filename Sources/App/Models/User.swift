@@ -48,7 +48,7 @@ extension User: BasicAuthenticatable {
 //    static let entity = User.entity
 //}
 
-extension User.Public: MySQLModel {}
+extension User.Public: Resultable {}
 
 /// 用户 code 为 000100
 extension User {
