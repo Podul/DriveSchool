@@ -13,16 +13,26 @@ struct UserController: RouteCollection {
     func boot(router: Router) throws {
         let userGroup = router.grouped("api", "user")
         userGroup.post(User.self, at: "register", use: userRegister)
-        userGroup.post(User.self, at: "login", use: userLogin)
-//        userGroup.post(User.self, at: "update", use: userUpdate)
+        
+        // 登录接口
+        let basicAuthMiddleware = User.basicAuthMiddleware(using: BCryptDigest())
+        let basicAuthGroup = userGroup.grouped(basicAuthMiddleware)
+        basicAuthGroup.post("login", use: userLogin)
+        
+        // 需要授权的接口
+        let tokenAuthMiddleware = User.tokenAuthMiddleware()
+        let tokenGroup = userGroup.grouped(tokenAuthMiddleware)
+        tokenGroup.post("info", use: userInfo)
     }
     
     /// 用户注册
     func userRegister(_ req: Request, registerUser: User) throws -> Future<Response> {
+        print(req.http.headers)
+        print(req.http.body)
+        print(req.http)
         return User.query(on: req).filter(\.name == registerUser.name).first().flatMap {
             if let _ = $0 {
                 // 用户已存在
-//                return try Result<User.Public>(error: DSError.register.alreadyExist).encode(for: req)
                 return try User.Public.failure(DSError.register.alreadyExist).encode(for: req)
             }
             let digest = try req.make(BCryptDigest.self)
@@ -31,22 +41,26 @@ struct UserController: RouteCollection {
                 let token = try Token.generate(for: newUser)
                 let publicInfo = User.Public(user: newUser)
                 _ = token.save(on: req)
+                
                 // 注册成功
-//                return try Result(error: DSError.register.success, result: publicInfo, token: token.token).encode(for: req)
-                return try publicInfo.success(error: DSError.register.success, token: token.tokenString).encode(for: req)
+                return try publicInfo.success(error: DSError.register.success,
+                                              token: token.tokenString).encode(for: req)
             }
         }
     }
     
     /// 用户登录
-    func userLogin(_ req: Request, loginUser: User) throws -> Future<Response> {
+    func userLogin(_ req: Request) throws -> Future<Response> {
+        
+        let loginUser = try req.requireAuthenticated(User.self)
+        print(loginUser.password)
         return User.query(on: req).filter(\.name == loginUser.name).first().flatMap { user -> Future<Response> in
             guard let user = user else {
                 // 用户不存在
                 return try Result<User.Public>(error: DSError.login.nonExist, result: nil).encode(for: req)
             }
-            let digest = try req.make(BCryptDigest.self)
-            if try digest.verify(loginUser.password, created: user.password) {
+//            let digest = try req.make(BCryptDigest.self)
+            if /*try digest.verify(loginUser.password, created: user.password)*/ loginUser.password == user.password {
                 // 密码正确
                 let publicInfo = User.Public(user: user)
                 
@@ -54,11 +68,9 @@ struct UserController: RouteCollection {
                 let token = try Token.generate(for: user)
                 _ = token.save(on: req)
                 // 登录成功
-//                return try Result(error: DSError.login.success, result: publicInfo, token: token.token).encode(for: req)
                 return try publicInfo.success(error: DSError.login.success, token: token.tokenString).encode(for: req)
             }else {
                 // 密码错误
-//                return try Result<User.Public>(error: DSError.login.passwordError).encode(for: req)
                 return try User.Public.failure(DSError.login.passwordError).encode(for: req)
             }
         }
@@ -68,6 +80,11 @@ struct UserController: RouteCollection {
 //    func userUpdate(_ req: Request, updateUser: User) throws -> Future<Response> {
 //
 //    }
+    
+    func userInfo(_ req: Request) throws -> Future<Response> {
+        let user = try req.requireAuthenticated(User.self)
+        return try user.encode(for: req)
+    }
 }
 
 //extension UserController {
