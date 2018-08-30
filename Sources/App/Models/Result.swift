@@ -67,4 +67,6 @@ struct DSError: Content {
     
     /// 未知错误
     static let unknow = DSError(code: 000002, message: "未知错误")
+    
+    static let token = DSError(code: 000003, message: "token 验证失败")
 }

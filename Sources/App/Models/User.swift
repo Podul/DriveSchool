@@ -39,10 +39,11 @@ extension User {
 extension User: Migration {}
 extension User: MySQLModel {}
 extension User: Parameter {}
-extension User: BasicAuthenticatable {
-    static let usernameKey: UsernameKey = \User.name
-    static let passwordKey: PasswordKey = \User.password
-}
+//extension User: BasicAuthenticatable {
+//    static let usernameKey: UsernameKey = \User.name
+//    static let passwordKey: PasswordKey = \User.password
+//}
+
 extension User: TokenAuthenticatable {
     typealias TokenType = Token
 }

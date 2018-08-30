@@ -13,11 +13,12 @@ struct UserController: RouteCollection {
     func boot(router: Router) throws {
         let userGroup = router.grouped("api", "user")
         userGroup.post(User.self, at: "register", use: userRegister)
+        userGroup.post(User.self, at: "login", use: userLogin)
         
         // 登录接口
-        let basicAuthMiddleware = User.basicAuthMiddleware(using: BCryptDigest())
-        let basicAuthGroup = userGroup.grouped(basicAuthMiddleware)
-        basicAuthGroup.post("login", use: userLogin)
+//        let basicAuthMiddleware = User.basicAuthMiddleware(using: BCryptDigest())
+//        let basicAuthGroup = userGroup.grouped(basicAuthMiddleware)
+//        basicAuthGroup.post("login", use: userLogin)
         
         // 需要授权的接口
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
@@ -41,7 +42,6 @@ struct UserController: RouteCollection {
                 let token = try Token.generate(for: newUser)
                 let publicInfo = User.Public(user: newUser)
                 _ = token.save(on: req)
-                
                 // 注册成功
                 return try publicInfo.success(error: DSError.register.success,
                                               token: token.tokenString).encode(for: req)
@@ -50,21 +50,16 @@ struct UserController: RouteCollection {
     }
     
     /// 用户登录
-    func userLogin(_ req: Request) throws -> Future<Response> {
-        
-        let loginUser = try req.requireAuthenticated(User.self)
-        print(loginUser.password)
+    func userLogin(_ req: Request, loginUser: User) throws -> Future<Response> {
         return User.query(on: req).filter(\.name == loginUser.name).first().flatMap { user -> Future<Response> in
             guard let user = user else {
                 // 用户不存在
                 return try Result<User.Public>(error: DSError.login.nonExist, result: nil).encode(for: req)
             }
-//            let digest = try req.make(BCryptDigest.self)
-            if /*try digest.verify(loginUser.password, created: user.password)*/ loginUser.password == user.password {
+            let digest = try req.make(BCryptDigest.self)
+            if try digest.verify(loginUser.password, created: user.password) {
                 // 密码正确
                 let publicInfo = User.Public(user: user)
-                
-//                user.token.query(on: req).
                 let token = try Token.generate(for: user)
                 _ = token.save(on: req)
                 // 登录成功
@@ -82,7 +77,11 @@ struct UserController: RouteCollection {
 //    }
     
     func userInfo(_ req: Request) throws -> Future<Response> {
-        let user = try req.requireAuthenticated(User.self)
+//        let user = try req.requireAuthenticated(User.self)
+        
+        guard let user = try? req.requireAuthenticated(User.self) else {
+            return try User.Public.failure(DSError.token).encode(for: req)
+        }
         return try user.encode(for: req)
     }
 }
