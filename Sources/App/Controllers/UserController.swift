@@ -28,9 +28,9 @@ struct UserController: RouteCollection {
     
     /// 用户注册
     func userRegister(_ req: Request, registerUser: User) throws -> Future<Response> {
-        print(req.http.headers)
-        print(req.http.body)
-        print(req.http)
+//        print(req.http.headers)
+//        print(req.http.body)
+//        print(req.http)
         return User.query(on: req).filter(\.name == registerUser.name).first().flatMap {
             if let _ = $0 {
                 // 用户已存在
@@ -77,12 +77,10 @@ struct UserController: RouteCollection {
 //    }
     
     func userInfo(_ req: Request) throws -> Future<Response> {
-//        let user = try req.requireAuthenticated(User.self)
-        
         guard let user = try? req.requireAuthenticated(User.self) else {
             return try User.Public.failure(DSError.token).encode(for: req)
         }
-        return try user.encode(for: req)
+        return try User.Public(user: user).encode(for: req)
     }
 }
 

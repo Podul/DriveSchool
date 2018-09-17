@@ -40,7 +40,7 @@ extension Token {
     }
 }
 
-extension 
+
 
 extension Token: Authentication.Token {
     static let userIDKey: UserIDKey = \Token.userID
