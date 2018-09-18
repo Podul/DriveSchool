@@ -33,6 +33,10 @@ extension User {
     var token: Children<User, Token> {
         return children(\.userID)
     }
+    
+    var userInfo: Children<User, UserInfo> {
+        return children(\.userID)
+    }
 }
 
 

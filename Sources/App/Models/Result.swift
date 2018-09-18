@@ -12,7 +12,7 @@ protocol Resultable: Content {}
 
 extension Resultable {
     /// 成功
-    func success(error: DSError, token: String? = nil) -> Result<Self> {
+    func success(error: DSError = .none(), token: String? = nil) -> Result<Self> {
         return Result(error: error, result: self, token: token)
     }
     /// 失败

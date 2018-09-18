@@ -24,6 +24,7 @@ struct UserController: RouteCollection {
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
         let tokenGroup = userGroup.grouped(tokenAuthMiddleware)
         tokenGroup.post("info", use: userInfo)
+        tokenGroup.post("updateInfo", use: userUpdate)
     }
     
     /// 用户注册
@@ -39,6 +40,13 @@ struct UserController: RouteCollection {
             let digest = try req.make(BCryptDigest.self)
             registerUser.password = try digest.hash(registerUser.password)
             return registerUser.save(on: req).flatMap { newUser -> Future<Response> in
+                // 注册的时候，添加用户信息
+                if let userID = newUser.id {
+                    var userInfo = UserInfo(userID: userID)
+                    userInfo.nickName = newUser.name
+                    _ = userInfo.save(on: req)
+                }
+                
                 let token = try Token.generate(for: newUser)
                 let publicInfo = User.Public(user: newUser)
                 _ = token.save(on: req)
@@ -56,11 +64,13 @@ struct UserController: RouteCollection {
                 // 用户不存在
                 return try Result<User.Public>(error: DSError.login.nonExist, result: nil).encode(for: req)
             }
+            
             let digest = try req.make(BCryptDigest.self)
             if try digest.verify(loginUser.password, created: user.password) {
                 // 密码正确
                 let publicInfo = User.Public(user: user)
                 let token = try Token.generate(for: user)
+                
                 _ = token.save(on: req)
                 // 登录成功
                 return try publicInfo.success(error: DSError.login.success, token: token.tokenString).encode(for: req)
@@ -72,13 +82,25 @@ struct UserController: RouteCollection {
     }
     
     /// 用户信息更新
-//    func userUpdate(_ req: Request, updateUser: User) throws -> Future<Response> {
-//
-//    }
+    func userUpdate(_ req: Request) throws -> Future<Response> {
+        guard let user = try? req.requireAuthenticated(User.self) else {
+            return try User.Public.failure(.token).encode(for: req)
+        }
+        return try req.content.decode(UserInfo.self).map { info -> Future<Response> in
+            var userInfo = UserInfo(userID: user.id)
+            userInfo.updateInfo(info)
+            
+            return try userInfo.save(on: req).map { newInfo -> Future<Response> in
+                return try newInfo.success().encode(for: req)
+            }.encode(for: req)
+        }.encode(for: req)
+    }
+    
+    
     
     func userInfo(_ req: Request) throws -> Future<Response> {
         guard let user = try? req.requireAuthenticated(User.self) else {
-            return try User.Public.failure(DSError.token).encode(for: req)
+            return try User.Public.failure(.token).encode(for: req)
         }
         return try User.Public(user: user).encode(for: req)
     }
