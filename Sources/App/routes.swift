@@ -11,6 +11,7 @@ public func routes(_ router: Router) throws {
 //    }
 
     // Example of configuring a controller
+    try router.register(collection: HoroscopeController())
     try router.register(collection: UserController())
     try router.register(collection: WebController())
 }

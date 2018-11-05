@@ -11,6 +11,15 @@
         }
       },
       {
+        "package": "CLibXML2",
+        "repositoryURL": "https://github.com/Zewo/CLibXML2.git",
+        "state": {
+          "branch": null,
+          "revision": "df6fdaf74ad820c8ea477a44ac98d24a25135561",
+          "version": "0.6.0"
+        }
+      },
+      {
         "package": "Console",
         "repositoryURL": "https://github.com/vapor/console.git",
         "state": {
@@ -71,6 +80,15 @@
           "branch": null,
           "revision": "8123ea00e9858b369cd168d0303d33e7d3804d19",
           "version": "3.0.7"
+        }
+      },
+      {
+        "package": "Ji",
+        "repositoryURL": "https://github.com/honghaoz/Ji.git",
+        "state": {
+          "branch": null,
+          "revision": "7f99606ca898080f4d34c31a1e579ea9c049d275",
+          "version": "2.1.0"
         }
       },
       {
