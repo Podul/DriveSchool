@@ -43,11 +43,11 @@ extension Token {
 
 
 extension Token: Authentication.Token {
-    static let userIDKey: UserIDKey = \Token.userID
+    static let userIDKey: UserIDKey = \.userID
     typealias UserType = User
 }
 
 extension Token: BearerAuthenticatable {
-    static var tokenKey: TokenKey = \Token.tokenString
+    static var tokenKey: TokenKey = \.tokenString
 }
 
